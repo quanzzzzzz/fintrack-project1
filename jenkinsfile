@@ -1,34 +1,46 @@
 pipeline {
     agent any
 
-    environment {
-        SONARQUBE = 'sonarqube-local'
-    }
-
     stages {
-        stage('Clone source') {
+        stage('Clone code') {
             steps {
                 git 'https://github.com/quanzzzzzz/fintrack-project1.git'
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('Build Backend JAR') {
             steps {
-                withSonarQubeEnv("${SONARQUBE}") {
-                    sh 'mvn clean verify sonar:sonar'
+                dir('backend') {
+                    sh 'mvn clean package -DskipTests'
+                }
+            }
+        }
+
+        stage('Build Frontend') {
+            steps {
+                dir('frontend') {
+                    sh 'npm install'
+                    sh 'npm run build'
                 }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker-compose -f docker-compose.yml build'
+                dir('backend') {
+                    sh 'docker build -t fintrack-backend .'
+                }
             }
         }
 
-        stage('Run Docker Compose') {
+        stage('Run Docker Container') {
             steps {
-                sh 'docker-compose -f docker-compose.yml up -d'
+                dir('backend') {
+                    sh '''
+                        docker rm -f fintrack-backend || true
+                        docker run -d -p 5000:5000 --name fintrack-backend fintrack-backend
+                    '''
+                }
             }
         }
     }
