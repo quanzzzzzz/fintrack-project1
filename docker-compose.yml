@@ -1,0 +1,24 @@
+services:
+  backend:
+    build: ./be-fintrack-master
+    container_name: backend
+    ports:
+      - "5000:5000"  # ✅ Sửa thành 5000
+    networks:
+      - fintrack-net
+
+  frontend:
+    build:
+      context: ./fe-fintrack-master
+      args:
+        - VITE_API_BASE_URL=http://backend:5000  # ✅ FE gọi BE qua service name
+    container_name: frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - fintrack-net
+
+networks:
+  fintrack-net:
