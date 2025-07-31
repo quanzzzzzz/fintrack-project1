@@ -1,9 +1,14 @@
 pipeline {
     agent any
 
+    tools {
+        maven 'Maven_3.9.11' // Tên này phải khớp với cấu hình Global Tool Configuration trong Jenkins
+    }
+
     environment {
         BACKEND_DIR = 'backend'
         FRONTEND_DIR = 'frontend'
+        DOCKER_BUILDKIT = '1'
     }
 
     stages {
