@@ -6,8 +6,8 @@ pipeline {
     }
 
     environment {
-        BACKEND_DIR = 'backend'
-        FRONTEND_DIR = 'frontend'
+        BACKEND_DIR = 'be-fintrack-master'
+        FRONTEND_DIR = 'fe-fintrack-master'
         DOCKER_BUILDKIT = '1'
         PATH = "${tool 'Maven_3.9.11'}/bin:${env.PATH}" // Đảm bảo Jenkins biết vị trí Maven
     }
