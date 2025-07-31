@@ -1,0 +1,35 @@
+pipeline {
+    agent any
+
+    environment {
+        SONARQUBE = 'sonarqube-local'
+    }
+
+    stages {
+        stage('Clone source') {
+            steps {
+                git 'https://github.com/quanzzzzzz/fintrack-project1.git'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv("${SONARQUBE}") {
+                    sh 'mvn clean verify sonar:sonar'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker-compose -f docker-compose.yml build'
+            }
+        }
+
+        stage('Run Docker Compose') {
+            steps {
+                sh 'docker-compose -f docker-compose.yml up -d'
+            }
+        }
+    }
+}
