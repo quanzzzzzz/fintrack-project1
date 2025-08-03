@@ -2,16 +2,14 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven_3.9.11'
-        nodejs 'Node_18' // ⚠️ Đảm bảo bạn đã cài tool Node.js trong Jenkins và đặt tên chính xác
+        maven 'Maven_3.9.11' // Phải khớp tên đã cấu hình trong Jenkins -> Global Tool Configuration
     }
 
     environment {
         BACKEND_DIR = 'be-fintrack-master'
         FRONTEND_DIR = 'fe-fintrack-master'
         DOCKER_BUILDKIT = '1'
-        PATH = "${tool 'Maven_3.9.11'}/bin:${tool 'Node_18'}/bin:${env.PATH}"
-        // Đã bỏ biến SONAR_PROJECT_KEY, SONAR_HOST_URL, SONAR_TOKEN
+        PATH = "${tool 'Maven_3.9.11'}/bin:${env.PATH}" // Đảm bảo Jenkins biết vị trí Maven
     }
 
     stages {
@@ -29,8 +27,6 @@ pipeline {
             }
         }
 
-        // ❌ Đã xoá stage 'SonarQube Analysis'
-
         stage('Build Frontend') {
             steps {
                 dir("${env.FRONTEND_DIR}") {
@@ -40,15 +36,21 @@ pipeline {
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Build Docker Image') {
             steps {
-                bat 'docker-compose build'
+                dir("${env.BACKEND_DIR}") {
+                    bat 'docker build -t fintrack-backend .'
+                }
             }
         }
 
-        stage('Deploy with Docker Compose') {
+        stage('Run Docker Container') {
             steps {
-                bat 'docker-compose up -d'
+                bat '''
+                    docker stop fintrack-backend || exit 0
+                    docker rm fintrack-backend || exit 0
+                    docker run -d -p 5000:5000 --name fintrack-backend fintrack-backend
+                '''
             }
         }
     }
