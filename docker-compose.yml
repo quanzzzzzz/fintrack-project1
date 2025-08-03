@@ -1,50 +1,22 @@
-version: '3.8'
-
 services:
   backend:
     build: ./be-fintrack-master
     container_name: backend
     ports:
-      - "5000:5000"
+      - "5000:5000"  # ✅ Sửa thành 5000
     networks:
       - fintrack-net
 
   frontend:
     build:
       context: ./fe-fintrack-master
+      args:
+        - VITE_API_BASE_URL=http://backend:5000  # ✅ FE gọi BE qua service name
     container_name: frontend
     ports:
       - "3000:80"
     depends_on:
       - backend
-    networks:
-      - fintrack-net
-
-  sonarqube:
-    image: sonarqube:9.9-community
-    container_name: sonarqube
-    ports:
-      - "9000:9000"
-    environment:
-      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
-    networks:
-      - fintrack-net
-
-  prometheus:
-    image: prom/prometheus
-    container_name: prometheus
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
-    networks:
-      - fintrack-net
-
-  grafana:
-    image: grafana/grafana
-    container_name: grafana
-    ports:
-      - "3001:3000"
     networks:
       - fintrack-net
 
