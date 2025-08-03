@@ -3,16 +3,17 @@ pipeline {
 
     tools {
         maven 'Maven_3.9.11'
+        nodejs 'Node_18' // ⚠️ Đảm bảo bạn đã cài tool Node.js trong Jenkins và đặt tên chính xác
     }
 
     environment {
         BACKEND_DIR = 'be-fintrack-master'
         FRONTEND_DIR = 'fe-fintrack-master'
         DOCKER_BUILDKIT = '1'
-        PATH = "${tool 'Maven_3.9.11'}/bin:${env.PATH}"
+        PATH = "${tool 'Maven_3.9.11'}/bin:${tool 'Node_18'}/bin:${env.PATH}"
         SONAR_PROJECT_KEY = 'fintrack'
         SONAR_HOST_URL = 'http://localhost:9000'
-        SONAR_TOKEN = credentials('sonar-token') // Tên credentials bạn tạo trong Jenkins
+        SONAR_TOKEN = credentials('sonar-token') // ✅ Đảm bảo đã tạo credentials ID là sonar-token
     }
 
     stages {
@@ -33,8 +34,13 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 dir("${env.BACKEND_DIR}") {
-                    withSonarQubeEnv('MySonarQubeServer') {
-                        bat "mvn sonar:sonar -Dsonar.projectKey=${env.SONAR_PROJECT_KEY} -Dsonar.host.url=${env.SONAR_HOST_URL} -Dsonar.login=${env.SONAR_TOKEN}"
+                    withSonarQubeEnv('MySonarQubeServer') { // ✅ Server name phải đúng với cấu hình Sonar trong Jenkins
+                        bat """
+                            mvn sonar:sonar ^
+                            -Dsonar.projectKey=${env.SONAR_PROJECT_KEY} ^
+                            -Dsonar.host.url=${env.SONAR_HOST_URL} ^
+                            -Dsonar.login=${env.SONAR_TOKEN}
+                        """
                     }
                 }
             }
@@ -49,21 +55,15 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Docker Images') {
             steps {
-                dir("${env.BACKEND_DIR}") {
-                    bat 'docker build -t fintrack-backend .'
-                }
+                bat 'docker-compose build'
             }
         }
 
-        stage('Run Docker Container') {
+        stage('Deploy with Docker Compose') {
             steps {
-                bat '''
-                    docker stop fintrack-backend || exit 0
-                    docker rm fintrack-backend || exit 0
-                    docker run -d -p 5000:5000 --name fintrack-backend fintrack-backend
-                '''
+                bat 'docker-compose up -d'
             }
         }
     }
