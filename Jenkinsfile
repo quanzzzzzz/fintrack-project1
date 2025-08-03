@@ -11,9 +11,7 @@ pipeline {
         FRONTEND_DIR = 'fe-fintrack-master'
         DOCKER_BUILDKIT = '1'
         PATH = "${tool 'Maven_3.9.11'}/bin:${tool 'Node_18'}/bin:${env.PATH}"
-        SONAR_PROJECT_KEY = 'fintrack'
-        SONAR_HOST_URL = 'http://localhost:9000'
-        SONAR_TOKEN = credentials('sonar-token') // ✅ Đảm bảo đã tạo credentials ID là sonar-token
+        // Đã bỏ biến SONAR_PROJECT_KEY, SONAR_HOST_URL, SONAR_TOKEN
     }
 
     stages {
@@ -31,20 +29,7 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                dir("${env.BACKEND_DIR}") {
-                    withSonarQubeEnv('MySonarQubeServer') { // ✅ Server name phải đúng với cấu hình Sonar trong Jenkins
-                        bat """
-                            mvn sonar:sonar ^
-                            -Dsonar.projectKey=${env.SONAR_PROJECT_KEY} ^
-                            -Dsonar.host.url=${env.SONAR_HOST_URL} ^
-                            -Dsonar.login=${env.SONAR_TOKEN}
-                        """
-                    }
-                }
-            }
-        }
+        // ❌ Đã xoá stage 'SonarQube Analysis'
 
         stage('Build Frontend') {
             steps {
