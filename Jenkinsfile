@@ -2,14 +2,17 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven_3.9.11' // Phải khớp tên đã cấu hình trong Jenkins -> Global Tool Configuration
+        maven 'Maven_3.9.11'
     }
 
     environment {
         BACKEND_DIR = 'be-fintrack-master'
         FRONTEND_DIR = 'fe-fintrack-master'
         DOCKER_BUILDKIT = '1'
-        PATH = "${tool 'Maven_3.9.11'}/bin:${env.PATH}" // Đảm bảo Jenkins biết vị trí Maven
+        PATH = "${tool 'Maven_3.9.11'}/bin:${env.PATH}"
+        SONAR_PROJECT_KEY = 'fintrack'
+        SONAR_HOST_URL = 'http://localhost:9000'
+        SONAR_TOKEN = credentials('sonar-token') // Tên credentials bạn tạo trong Jenkins
     }
 
     stages {
@@ -23,6 +26,16 @@ pipeline {
             steps {
                 dir("${env.BACKEND_DIR}") {
                     bat 'mvn clean package -DskipTests'
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                dir("${env.BACKEND_DIR}") {
+                    withSonarQubeEnv('MySonarQubeServer') {
+                        bat "mvn sonar:sonar -Dsonar.projectKey=${env.SONAR_PROJECT_KEY} -Dsonar.host.url=${env.SONAR_HOST_URL} -Dsonar.login=${env.SONAR_TOKEN}"
+                    }
                 }
             }
         }
