@@ -12,8 +12,6 @@ services:
   frontend:
     build:
       context: ./fe-fintrack-master
-      args:
-        - VITE_API_BASE_URL=http://backend:5000
     container_name: frontend
     ports:
       - "3000:80"
